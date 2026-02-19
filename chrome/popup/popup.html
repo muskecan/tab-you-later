@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="tyl-container">
+    
+    <header class="tyl-header">
+      <h1 class="tyl-title" data-i18n="popup_title">Tab You Later</h1>
+      <div class="tyl-header-actions">
+        <button id="save-close-btn" class="tyl-icon-btn" data-i18n-title="popup_save_close_title" title="Save & Close Tab">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <path d="M2 4C2 2.9 2.9 2 4 2H10L13 5V12C13 13.1 12.1 14 11 14H4C2.9 14 2 13.1 2 12V4Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M5 2V5H9V2" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="14" y1="2" x2="14" y2="2" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+        </button>
+        <button id="select-mode-btn" class="tyl-icon-btn" data-i18n-title="popup_select_mode_title" title="Select items">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+        </button>
+        <button id="save-all-btn" class="tyl-icon-btn" data-i18n-title="popup_save_all_title" title="Save all tabs">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <path d="M2 4C2 2.9 2.9 2 4 2H12C13.1 2 14 2.9 14 4V14L8 11L2 14V4Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+            <line x1="5.5" y1="6.5" x2="10.5" y2="6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button id="settings-btn" class="tyl-icon-btn" data-i18n-title="popup_settings_title" title="Settings">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <path d="M6.5 1L6.2 2.6C5.8 2.8 5.4 3 5.1 3.3L3.5 2.7L2 5.3L3.3 6.3C3.3 6.5 3.2 6.8 3.2 7C3.2 7.2 3.3 7.5 3.3 7.7L2 8.7L3.5 11.3L5.1 10.7C5.4 11 5.8 11.2 6.2 11.4L6.5 13H9.5L9.8 11.4C10.2 11.2 10.6 11 10.9 10.7L12.5 11.3L14 8.7L12.7 7.7C12.7 7.5 12.8 7.2 12.8 7C12.8 6.8 12.7 6.5 12.7 6.3L14 5.3L12.5 2.7L10.9 3.3C10.6 3 10.2 2.8 9.8 2.6L9.5 1H6.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <circle cx="8" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    
+    <div class="tyl-toolbar">
+      <div class="tyl-search-wrap">
+        <svg class="tyl-search-icon" width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="10.5" y1="10.5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input type="text" id="search-input" class="tyl-search" data-i18n-placeholder="popup_search_placeholder" placeholder="Search…" autocomplete="off">
+      </div>
+      <select id="sort-select" class="tyl-sort-select">
+        <option value="newest" data-i18n-text="sort_newest">Newest</option>
+        <option value="oldest" data-i18n-text="sort_oldest">Oldest</option>
+        <option value="alpha" data-i18n-text="sort_alpha">A–Z</option>
+        <option value="domain" data-i18n-text="sort_domain">Domain</option>
+        <option value="manual" data-i18n-text="sort_manual">Manual</option>
+      </select>
+    </div>
+
+    
+    <div id="category-bar" class="tyl-category-bar" hidden></div>
+
+    
+    <div id="items-list" class="tyl-list"></div>
+
+    
+    <div id="empty-state" class="tyl-empty" hidden>
+      <svg width="44" height="44" viewBox="0 0 48 48" fill="none">
+        <rect x="8" y="6" width="32" height="36" rx="4" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+        <line x1="14" y1="16" x2="34" y2="16" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+        <line x1="14" y1="22" x2="30" y2="22" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+        <line x1="14" y1="28" x2="26" y2="28" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+      </svg>
+      <p data-i18n="popup_empty_title">No saved links yet.</p>
+      <span class="tyl-empty-hint" data-i18n="popup_empty_hint">Right-click to save pages or links.</span>
+    </div>
+
+    
+    <div id="no-results" class="tyl-empty" hidden>
+      <p data-i18n="popup_no_results">No results found.</p>
+    </div>
+
+    
+    <div id="bulk-bar" class="tyl-bulk-bar" hidden>
+      <button id="bulk-select-all" class="tyl-bulk-btn" data-i18n="popup_bulk_select_all">Select All</button>
+      <span id="bulk-count" class="tyl-bulk-count"></span>
+      <div class="tyl-bulk-actions">
+        <button id="bulk-open" class="tyl-bulk-btn tyl-bulk-btn--accent" data-i18n="popup_bulk_open">Open</button>
+        <button id="bulk-delete" class="tyl-bulk-btn tyl-bulk-btn--danger" data-i18n="popup_bulk_delete">Delete</button>
+      </div>
+    </div>
+
+    
+    <div id="undo-toast" class="tyl-undo-toast" hidden>
+      <span id="undo-msg" class="tyl-undo-msg"></span>
+      <button id="undo-btn" class="tyl-undo-btn" data-i18n="popup_undo_btn">Undo</button>
+    </div>
+  </div>
+
+  
+  <div id="cat-dropdown" class="tyl-cat-dropdown" hidden></div>
+
+  
+  <div id="reminder-dropdown" class="tyl-reminder-dropdown" hidden></div>
+  <div id="note-dropdown" class="tyl-note-dropdown" hidden></div>
+
+  <script src="../i18n/translations.js"></script>
+  <script src="../i18n/i18n.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
