@@ -44,8 +44,8 @@ tab-you-later/
 
 ## Current Version
 
-- Firefox: `1.0.0`
-- Chrome: `1.0.0`
+- Firefox: `1.0.1`
+- Chrome: `1.0.1`
 
 ## Shared Feature Set
 
@@ -83,7 +83,7 @@ tab-you-later/
 ## Browser Store URLs
 
 - Firefox Add-ons listing: `https://addons.mozilla.org/firefox/addon/tab-you-later/`
-- Chrome Web Store listing: `https://chromewebstore.google.com/detail/tab-you-later/REPLACE_WITH_EXTENSION_ID`
+- Chrome Web Store listing: `https://chromewebstore.google.com/detail/tab-you-later/hhggidekeifkiafeoclfjmhfdboehiib`
 
 ## Browser-Specific Notes
 

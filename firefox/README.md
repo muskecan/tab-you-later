@@ -9,7 +9,7 @@ A focused Firefox extension that helps you tame tab overload. Save pages and lin
 ## Store URLs
 
 - Firefox Add-ons listing: `https://addons.mozilla.org/firefox/addon/tab-you-later/`
-- Chrome Web Store listing: `https://chromewebstore.google.com/detail/tab-you-later/REPLACE_WITH_EXTENSION_ID`
+- Chrome Web Store listing: `https://chromewebstore.google.com/detail/tab-you-later/hhggidekeifkiafeoclfjmhfdboehiib`
 
 ### Development / Sideload
 

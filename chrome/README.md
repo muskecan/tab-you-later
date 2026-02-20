@@ -6,12 +6,12 @@ Built on Manifest V3 with a service worker background and `chrome.storage.sessio
 
 ## Install
 
-> **Chrome Web Store:** [https://chromewebstore.google.com/detail/tab-you-later/REPLACE_WITH_EXTENSION_ID](https://chromewebstore.google.com/detail/tab-you-later/REPLACE_WITH_EXTENSION_ID)
+> **Chrome Web Store:** [https://chromewebstore.google.com/detail/tab-you-later/hhggidekeifkiafeoclfjmhfdboehiib](https://chromewebstore.google.com/detail/tab-you-later/hhggidekeifkiafeoclfjmhfdboehiib)
 
 ## Store URLs
 
 - Firefox Add-ons listing: `https://addons.mozilla.org/firefox/addon/tab-you-later/`
-- Chrome Web Store listing: `https://chromewebstore.google.com/detail/tab-you-later/REPLACE_WITH_EXTENSION_ID`
+- Chrome Web Store listing: `https://chromewebstore.google.com/detail/tab-you-later/hhggidekeifkiafeoclfjmhfdboehiib`
 
 ### Development / Sideload
 
