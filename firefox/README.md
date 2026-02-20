@@ -8,8 +8,8 @@ A focused Firefox extension that helps you tame tab overload. Save pages and lin
 
 ## Store URLs
 
-- Firefox Add-ons listing: `https://addons.mozilla.org/firefox/addon/tab-you-later/`
-- Chrome Web Store listing: `https://chromewebstore.google.com/detail/tab-you-later/hhggidekeifkiafeoclfjmhfdboehiib`
+- **Firefox Add-ons:** [https://addons.mozilla.org/firefox/addon/tab-you-later/](https://addons.mozilla.org/firefox/addon/tab-you-later/)
+- **Chrome Web Store:** [https://chromewebstore.google.com/detail/tab-you-later/hhggidekeifkiafeoclfjmhfdboehiib](https://chromewebstore.google.com/detail/tab-you-later/hhggidekeifkiafeoclfjmhfdboehiib)
 
 ### Development / Sideload
 
@@ -22,17 +22,26 @@ A focused Firefox extension that helps you tame tab overload. Save pages and lin
 ### Core
 
 - **Context Menu Integration** — Right-click any page or link to save it, with optional category assignment
-- **Save & Close** — Save the current tab and close it in a single action
+- **Save & Close** — Save the current tab and close it in a single action; when categories exist, a picker appears to choose the target category
 - **Save All Tabs** — Save every open tab in the current window with one click
 - **Popup UI** — Quick access from the toolbar with a real-time search bar and scrollable list
+- **Real-Time Updates** — Popup list refreshes automatically when items are added or changed in the background
 - **Badge Count** — Display the number of saved items on the toolbar icon (toggleable)
 
 ### Organization
 
 - **Categories** — Create color-coded categories, assign them to links, and filter by category
+- **Quick Category Creation** — Create a new category from the right-click menu or the popup without leaving the current page (standalone mini-window)
+- **Save Page to New Category** — Option to save the current page into the category during creation
+- **Category Editing** — Rename and recolor existing categories from Settings
 - **Pin Important Items** — Pin links to keep them at the top regardless of sort order
 - **Sort & Reorder** — Sort by newest, oldest, alphabetical, domain, or manual drag-and-drop
 - **Bulk Actions** — Multi-select items to open or delete in batch
+
+### Per-URL Notes
+
+- **Inline Notes** — Attach a text note to any saved link via the note icon
+- **Edit / Delete** — Notes open as an editable dropdown with save, cancel, and delete controls
 
 ### Search
 
@@ -60,6 +69,7 @@ A focused Firefox extension that helps you tame tab overload. Save pages and lin
 - **Auto-Expire** — Remove items older than a configurable number of days (non-retroactive)
 - **Undo Delete** — 5-second undo toast after deleting single or multiple items
 - **Duplicate Detection** — Visual cue when trying to save a link that already exists
+- **Onboarding** — Introductory page on first install
 
 ### Internationalization
 
@@ -81,17 +91,19 @@ Language is auto-detected from the browser and can be changed manually in Settin
 
 1. **Save a page** — Right-click on any page and select *Send to Tab You Later*
 2. **Save a link** — Right-click on any hyperlink and select *Send Link to Tab You Later*
-3. **Save & close** — Use the save-close icon in the popup header or the context menu
-4. **View saved items** — Click the Tab You Later icon in the toolbar
-5. **Search** — Type in the search box; combine operators like `cat:Work site:github.com is:pinned`
-6. **Pin** — Hover over an item and click the pin icon to keep it at the top
-7. **Set a reminder** — Click the bell icon on an item and pick a date/time
-8. **Open** — Click any item to open it in a new tab
-9. **Delete** — Hover and click the trash icon; an undo toast appears for 5 seconds
-10. **Bulk actions** — Click the grid icon to enter select mode, then open or delete selected items
-11. **Categories** — Create categories in Settings, then assign via the folder icon on each item
-12. **Encryption** — Enable in Settings with a passphrase; unlock once per browser session
-13. **Settings** — Click the gear icon in the popup to configure all options
+3. **Save & close** — Use the save-close icon in the popup header or the context menu; pick a category if prompted
+4. **Create a category** — Right-click and choose *Create Category…*, or use the "+" option in the save-close picker
+5. **View saved items** — Click the Tab You Later icon in the toolbar
+6. **Search** — Type in the search box; combine operators like `cat:Work site:github.com is:pinned`
+7. **Pin** — Hover over an item and click the pin icon to keep it at the top
+8. **Add a note** — Click the note icon on an item to write or edit a note
+9. **Set a reminder** — Click the bell icon on an item and pick a date/time
+10. **Open** — Click any item to open it in a new tab
+11. **Delete** — Hover and click the trash icon; an undo toast appears for 5 seconds
+12. **Bulk actions** — Click the grid icon to enter select mode, then open or delete selected items
+13. **Edit categories** — Open Settings to rename or recolor existing categories
+14. **Encryption** — Enable in Settings with a passphrase; unlock once per browser session
+15. **Settings** — Click the gear icon in the popup to configure all options
 
 ## File Structure
 
@@ -114,6 +126,10 @@ tab-you-later/
 │   ├── onboarding.html
 │   ├── onboarding.css
 │   └── onboarding.js
+├── quick-category/
+│   ├── quick-category.html
+│   ├── quick-category.css
+│   └── quick-category.js
 └── icons/
     ├── icon.svg
     ├── icon-16.png
@@ -148,7 +164,8 @@ Each saved item is stored as:
   "favIconUrl": "data:image/... or https://...",
   "favIconDataUrl": "data:image/... (cached mode)",
   "pinned": false,
-  "reminderAt": null
+  "reminderAt": null,
+  "note": "User-written note or null"
 }
 ```
 

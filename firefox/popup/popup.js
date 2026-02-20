@@ -13,6 +13,7 @@ const DOM = {
   catDropdown: $("#cat-dropdown"),
   reminderDropdown: $("#reminder-dropdown"),
   noteDropdown: $("#note-dropdown"),
+  scDropdown: $("#save-close-dropdown"),
   undoToast: $("#undo-toast"),
   undoMsg: $("#undo-msg"),
   undoBtn: $("#undo-btn"),
@@ -67,10 +68,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!DOM.noteDropdown.contains(e.target) && !e.target.closest(".tyl-note-btn")) {
       DOM.noteDropdown.hidden = true;
     }
+    if (!DOM.scDropdown.contains(e.target) && !e.target.closest("#save-close-btn")) {
+      DOM.scDropdown.hidden = true;
+    }
   });
 
-  browser.storage.onChanged.addListener((changes) => {
+  browser.storage.onChanged.addListener(async (changes) => {
     if (changes.tylItems) loadItems();
+    if (changes.settings) {
+      const resp = await browser.runtime.sendMessage({ action: "getSettings" });
+      settings = resp.settings;
+      renderCategoryBar();
+    }
   });
 });
 
@@ -474,7 +483,61 @@ async function handleUndo() {
 // ─── Save + Close ────────────────────────────────────────
 
 async function saveAndClose() {
-  await browser.runtime.sendMessage({ action: "saveAndCloseCurrentTab" });
+  const cats = settings.categories || [];
+  if (cats.length === 0) {
+    await browser.runtime.sendMessage({ action: "saveAndCloseCurrentTab" });
+    return;
+  }
+  showSaveCloseDropdown();
+}
+
+function showSaveCloseDropdown() {
+  const dd = DOM.scDropdown;
+  dd.innerHTML = "";
+  const cats = settings.categories || [];
+
+  const uncatBtn = document.createElement("button");
+  uncatBtn.className = "tyl-sc-opt";
+  uncatBtn.textContent = tylT("popup_category_uncategorized", currentLang);
+  uncatBtn.addEventListener("click", async () => {
+    dd.hidden = true;
+    await browser.runtime.sendMessage({ action: "saveAndCloseCurrentTab", categoryId: null });
+  });
+  dd.appendChild(uncatBtn);
+
+  cats.forEach((c) => {
+    const btn = document.createElement("button");
+    btn.className = "tyl-sc-opt";
+    const dot = document.createElement("span");
+    dot.className = "tyl-sc-dot";
+    dot.style.background = c.color;
+    btn.appendChild(dot);
+    btn.appendChild(document.createTextNode(c.name));
+    btn.addEventListener("click", async () => {
+      dd.hidden = true;
+      await browser.runtime.sendMessage({ action: "saveAndCloseCurrentTab", categoryId: c.id });
+    });
+    dd.appendChild(btn);
+  });
+
+  const sep = document.createElement("div");
+  sep.className = "tyl-sc-sep";
+  dd.appendChild(sep);
+
+  const newBtn = document.createElement("button");
+  newBtn.className = "tyl-sc-opt tyl-sc-opt--create";
+  newBtn.textContent = tylT("popup_create_category", currentLang);
+  newBtn.addEventListener("click", () => {
+    dd.hidden = true;
+    browser.windows.create({ url: browser.runtime.getURL("quick-category/quick-category.html"), type: "popup", width: 340, height: 290 });
+  });
+  dd.appendChild(newBtn);
+
+  dd.hidden = false;
+  const anchor = document.getElementById("save-close-btn");
+  const rect = anchor.getBoundingClientRect();
+  dd.style.top = `${rect.bottom + 4}px`;
+  dd.style.left = `${Math.max(4, rect.left)}px`;
 }
 
 // ─── Save All Tabs ───────────────────────────────────────

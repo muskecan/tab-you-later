@@ -197,6 +197,12 @@ function renderCategories() {
     name.textContent = cat.name;
     row.appendChild(name);
 
+    const editBtn = document.createElement("button");
+    editBtn.className = "opt-cat-edit";
+    editBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M11.5 1.5L14.5 4.5L5 14H2V11L11.5 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>';
+    editBtn.addEventListener("click", () => enterEditMode(row, cat));
+    row.appendChild(editBtn);
+
     const del = document.createElement("button");
     del.className = "opt-cat-del";
     del.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
@@ -205,6 +211,67 @@ function renderCategories() {
 
     DOM.catList.appendChild(row);
   });
+}
+
+function enterEditMode(row, cat) {
+  row.innerHTML = "";
+  row.classList.add("opt-cat-item--editing");
+
+  let editColor = cat.color || "#5b5b66";
+
+  const colorBtn = document.createElement("div");
+  colorBtn.className = "opt-cat-color";
+  colorBtn.style.background = editColor;
+  row.appendChild(colorBtn);
+
+  const palette = document.createElement("div");
+  palette.className = "opt-edit-palette";
+  palette.hidden = true;
+  TYL_CATEGORY_COLORS.forEach((c) => {
+    const sw = document.createElement("div");
+    sw.className = "opt-color-swatch" + (c === editColor ? " active" : "");
+    sw.style.background = c;
+    sw.addEventListener("click", () => {
+      editColor = c;
+      colorBtn.style.background = c;
+      palette.querySelectorAll(".opt-color-swatch").forEach((s) => s.classList.remove("active"));
+      sw.classList.add("active");
+      palette.hidden = true;
+    });
+    palette.appendChild(sw);
+  });
+
+  colorBtn.addEventListener("click", () => { palette.hidden = !palette.hidden; });
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "opt-cat-input";
+  input.value = cat.name;
+  input.maxLength = 30;
+  row.appendChild(input);
+
+  const saveBtn = document.createElement("button");
+  saveBtn.className = "opt-btn-sm opt-btn-sm--accent";
+  saveBtn.textContent = tylT("category_edit_save", currentLang);
+  saveBtn.addEventListener("click", async () => {
+    const newName = input.value.trim();
+    if (!newName) return;
+    await browser.runtime.sendMessage({ action: "updateCategory", id: cat.id, name: newName, color: editColor });
+    const resp = await browser.runtime.sendMessage({ action: "getSettings" });
+    settings = resp.settings;
+    renderCategories();
+  });
+  row.appendChild(saveBtn);
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.className = "opt-btn-sm";
+  cancelBtn.textContent = tylT("category_edit_cancel", currentLang);
+  cancelBtn.addEventListener("click", () => renderCategories());
+  row.appendChild(cancelBtn);
+
+  row.appendChild(palette);
+  input.focus();
+  input.select();
 }
 
 async function addCategory() {

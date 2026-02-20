@@ -21,6 +21,7 @@ const TYL_TRANSLATIONS = {
 
     popup_category_all: "All",
     popup_category_uncategorized: "Uncategorized",
+    popup_create_category: "Create Category…",
 
     popup_empty_title: "No saved links yet.",
     popup_empty_hint: "Right-click to save pages or links.",
@@ -132,6 +133,8 @@ const TYL_TRANSLATIONS = {
     category_add: "Add Category",
     category_name_placeholder: "Category name",
     category_delete_confirm: "Delete this category? Items in it will become uncategorized.",
+    category_edit_save: "Save",
+    category_edit_cancel: "Cancel",
 
     options_importexport_title: "Import / Export",
     options_importexport_desc: "Backup or restore your saved links.",
@@ -171,6 +174,7 @@ const TYL_TRANSLATIONS = {
 
     popup_category_all: "Tümü",
     popup_category_uncategorized: "Kategorisiz",
+    popup_create_category: "Kategori Oluştur…",
 
     popup_empty_title: "Henüz kayıtlı link yok.",
     popup_empty_hint: "Sağ tıklayarak sayfa veya linkleri kaydedin.",
@@ -280,6 +284,8 @@ const TYL_TRANSLATIONS = {
     category_add: "Kategori Ekle",
     category_name_placeholder: "Kategori adı",
     category_delete_confirm: "Bu kategori silinsin mi? İçindeki öğeler kategorisiz olacak.",
+    category_edit_save: "Kaydet",
+    category_edit_cancel: "İptal",
 
     options_importexport_title: "İçe / Dışa Aktar",
     options_importexport_desc: "Kayıtlı linklerinizi yedekleyin veya geri yükleyin.",
@@ -318,6 +324,7 @@ const TYL_TRANSLATIONS = {
 
     popup_category_all: "Alle",
     popup_category_uncategorized: "Unkategorisiert",
+    popup_create_category: "Kategorie erstellen…",
 
     popup_empty_title: "Noch keine gespeicherten Links.",
     popup_empty_hint: "Rechtsklick, um Seiten oder Links zu speichern.",
@@ -427,6 +434,8 @@ const TYL_TRANSLATIONS = {
     category_add: "Kategorie hinzufügen",
     category_name_placeholder: "Kategoriename",
     category_delete_confirm: "Diese Kategorie löschen? Einträge darin werden unkategorisiert.",
+    category_edit_save: "Speichern",
+    category_edit_cancel: "Abbrechen",
 
     options_importexport_title: "Import / Export",
     options_importexport_desc: "Sichern oder wiederherstellen Sie Ihre gespeicherten Links.",
@@ -465,6 +474,7 @@ const TYL_TRANSLATIONS = {
 
     popup_category_all: "Tous",
     popup_category_uncategorized: "Non classé",
+    popup_create_category: "Créer une catégorie…",
 
     popup_empty_title: "Aucun lien enregistré.",
     popup_empty_hint: "Faites un clic droit pour enregistrer des pages ou liens.",
@@ -574,6 +584,8 @@ const TYL_TRANSLATIONS = {
     category_add: "Ajouter une catégorie",
     category_name_placeholder: "Nom de la catégorie",
     category_delete_confirm: "Supprimer cette catégorie ? Les éléments deviendront non classés.",
+    category_edit_save: "Enregistrer",
+    category_edit_cancel: "Annuler",
 
     options_importexport_title: "Import / Export",
     options_importexport_desc: "Sauvegardez ou restaurez vos liens enregistrés.",
@@ -612,6 +624,7 @@ const TYL_TRANSLATIONS = {
 
     popup_category_all: "Todos",
     popup_category_uncategorized: "Sin categoría",
+    popup_create_category: "Crear categoría…",
 
     popup_empty_title: "No hay enlaces guardados.",
     popup_empty_hint: "Haz clic derecho para guardar páginas o enlaces.",
@@ -721,6 +734,8 @@ const TYL_TRANSLATIONS = {
     category_add: "Añadir categoría",
     category_name_placeholder: "Nombre de categoría",
     category_delete_confirm: "¿Eliminar esta categoría? Los elementos quedarán sin categoría.",
+    category_edit_save: "Guardar",
+    category_edit_cancel: "Cancelar",
 
     options_importexport_title: "Importar / Exportar",
     options_importexport_desc: "Haz una copia de seguridad o restaura tus enlaces guardados.",
@@ -759,6 +774,7 @@ const TYL_TRANSLATIONS = {
 
     popup_category_all: "全部",
     popup_category_uncategorized: "未分类",
+    popup_create_category: "创建分类…",
 
     popup_empty_title: "暂无已保存的链接。",
     popup_empty_hint: "右键点击以保存页面或链接。",
@@ -868,6 +884,8 @@ const TYL_TRANSLATIONS = {
     category_add: "添加分类",
     category_name_placeholder: "分类名称",
     category_delete_confirm: "删除此分类？其中的项目将变为未分类。",
+    category_edit_save: "保存",
+    category_edit_cancel: "取消",
 
     options_importexport_title: "导入 / 导出",
     options_importexport_desc: "备份或恢复您保存的链接。",
@@ -906,6 +924,7 @@ const TYL_TRANSLATIONS = {
 
     popup_category_all: "すべて",
     popup_category_uncategorized: "未分類",
+    popup_create_category: "カテゴリを作成…",
 
     popup_empty_title: "保存されたリンクはありません。",
     popup_empty_hint: "右クリックでページやリンクを保存できます。",
@@ -1015,6 +1034,8 @@ const TYL_TRANSLATIONS = {
     category_add: "カテゴリを追加",
     category_name_placeholder: "カテゴリ名",
     category_delete_confirm: "このカテゴリを削除しますか？中のアイテムは未分類になります。",
+    category_edit_save: "保存",
+    category_edit_cancel: "キャンセル",
 
     options_importexport_title: "インポート / エクスポート",
     options_importexport_desc: "保存したリンクのバックアップと復元を行います。",

@@ -1,11 +1,11 @@
 const CTX_T = {
-  en: { page: "Send to Tab You Later",      link: "Send Link to Tab You Later",      close: "Save && Close Tab", uncat: "Uncategorized" },
-  tr: { page: "Tab you later'a Gönder",     link: "Link'i Tab you later'a Gönder",   close: "Kaydet && Sekmeyi Kapat", uncat: "Kategorisiz" },
-  de: { page: "An Tab You Later senden",     link: "Link an Tab You Later senden",    close: "Speichern && Tab schließen", uncat: "Unkategorisiert" },
-  fr: { page: "Envoyer à Tab You Later",     link: "Envoyer le lien à Tab You Later", close: "Enregistrer && Fermer l'onglet", uncat: "Non classé" },
-  es: { page: "Enviar a Tab You Later",      link: "Enviar enlace a Tab You Later",   close: "Guardar && cerrar pestaña", uncat: "Sin categoría" },
-  zh: { page: "发送到 Tab You Later",         link: "将链接发送到 Tab You Later",        close: "保存并关闭标签页", uncat: "未分类" },
-  ja: { page: "Tab You Later に送る",        link: "リンクを Tab You Later に送る",     close: "保存してタブを閉じる", uncat: "未分類" }
+  en: { page: "Send to Tab You Later",      link: "Send Link to Tab You Later",      close: "Save && Close Tab", uncat: "Uncategorized", newCat: "Create Category…" },
+  tr: { page: "Tab you later'a Gönder",     link: "Link'i Tab you later'a Gönder",   close: "Kaydet && Sekmeyi Kapat", uncat: "Kategorisiz", newCat: "Kategori Oluştur…" },
+  de: { page: "An Tab You Later senden",     link: "Link an Tab You Later senden",    close: "Speichern && Tab schließen", uncat: "Unkategorisiert", newCat: "Kategorie erstellen…" },
+  fr: { page: "Envoyer à Tab You Later",     link: "Envoyer le lien à Tab You Later", close: "Enregistrer && Fermer l'onglet", uncat: "Non classé", newCat: "Créer une catégorie…" },
+  es: { page: "Enviar a Tab You Later",      link: "Enviar enlace a Tab You Later",   close: "Guardar && cerrar pestaña", uncat: "Sin categoría", newCat: "Crear categoría…" },
+  zh: { page: "发送到 Tab You Later",         link: "将链接发送到 Tab You Later",        close: "保存并关闭标签页", uncat: "未分类", newCat: "创建分类…" },
+  ja: { page: "Tab You Later に送る",        link: "リンクを Tab You Later に送る",     close: "保存してタブを閉じる", uncat: "未分類", newCat: "カテゴリを作成…" }
 };
 
 const NOTIF_T = {
@@ -301,12 +301,16 @@ async function setupContextMenus() {
   const s = await getSettings();
   const cats = s.categories || [];
 
-  browser.contextMenus.create({ id: "tyl-save-close", title: t.close, contexts: ["page"] });
-
   if (cats.length === 0) {
+    browser.contextMenus.create({ id: "tyl-save-close", title: t.close, contexts: ["page"] });
     browser.contextMenus.create({ id: "tyl-save-page", title: t.page, contexts: ["page"] });
     browser.contextMenus.create({ id: "tyl-save-link", title: t.link, contexts: ["link"] });
   } else {
+    browser.contextMenus.create({ id: "tyl-close-parent", title: t.close, contexts: ["page"] });
+    browser.contextMenus.create({ id: "tyl-save-close", parentId: "tyl-close-parent", title: t.uncat, contexts: ["page"] });
+    browser.contextMenus.create({ id: "tyl-close-sep", parentId: "tyl-close-parent", type: "separator", contexts: ["page"] });
+    cats.forEach((c) => browser.contextMenus.create({ id: `tyl-save-close-cat-${c.id}`, parentId: "tyl-close-parent", title: c.name, contexts: ["page"] }));
+
     browser.contextMenus.create({ id: "tyl-page-parent", title: t.page, contexts: ["page"] });
     browser.contextMenus.create({ id: "tyl-save-page", parentId: "tyl-page-parent", title: t.uncat, contexts: ["page"] });
     browser.contextMenus.create({ id: "tyl-page-sep", parentId: "tyl-page-parent", type: "separator", contexts: ["page"] });
@@ -317,6 +321,9 @@ async function setupContextMenus() {
     browser.contextMenus.create({ id: "tyl-link-sep", parentId: "tyl-link-parent", type: "separator", contexts: ["link"] });
     cats.forEach((c) => browser.contextMenus.create({ id: `tyl-save-link-cat-${c.id}`, parentId: "tyl-link-parent", title: c.name, contexts: ["link"] }));
   }
+
+  browser.contextMenus.create({ id: "tyl-sep-create", type: "separator", contexts: ["page", "link"] });
+  browser.contextMenus.create({ id: "tyl-create-category", title: t.newCat, contexts: ["page", "link"] });
 }
 
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -327,6 +334,9 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
   if (mid === "tyl-save-close") {
     await addItem(tab.title, tab.url, null, fav);
     browser.tabs.remove(tab.id);
+  } else if (mid.startsWith("tyl-save-close-cat-")) {
+    await addItem(tab.title, tab.url, mid.replace("tyl-save-close-cat-", ""), fav);
+    browser.tabs.remove(tab.id);
   } else if (mid === "tyl-save-page") {
     await addItem(tab.title, tab.url, null, fav);
   } else if (mid.startsWith("tyl-save-page-cat-")) {
@@ -335,6 +345,13 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     await addItem(info.linkText || info.linkUrl, info.linkUrl, null, fav);
   } else if (mid.startsWith("tyl-save-link-cat-")) {
     await addItem(info.linkText || info.linkUrl, info.linkUrl, mid.replace("tyl-save-link-cat-", ""), fav);
+  } else if (mid === "tyl-create-category") {
+    browser.windows.create({
+      url: browser.runtime.getURL("quick-category/quick-category.html"),
+      type: "popup",
+      width: 340,
+      height: 290
+    });
   }
 });
 
@@ -389,6 +406,38 @@ browser.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         await initReminderAlarms();
         const cur = await getItems();
         await updateBadge(cur.length);
+        return { success: true };
+      }
+
+      case "createCategory": {
+        const s = await getSettings();
+        if (!s.categories) s.categories = [];
+        const id = uuidv4();
+        s.categories.push({ id, name: msg.name, color: msg.color });
+        await migrateStorage(s);
+        await setupContextMenus();
+        if (msg.saveCurrentTab) {
+          const wins = await browser.windows.getAll({ windowTypes: ["normal"] });
+          const focusedWin = wins.find((w) => w.focused) || wins[0];
+          if (focusedWin) {
+            const tabs = await browser.tabs.query({ active: true, windowId: focusedWin.id });
+            if (tabs[0] && tabs[0].url && !tabs[0].url.startsWith("about:") && !tabs[0].url.startsWith("moz-extension:")) {
+              const fav = await resolveFavicon(tabs[0], s.faviconMode);
+              await addItem(tabs[0].title, tabs[0].url, id, fav);
+            }
+          }
+        }
+        return { success: true, id };
+      }
+
+      case "updateCategory": {
+        const s = await getSettings();
+        const cat = (s.categories || []).find((c) => c.id === msg.id);
+        if (!cat) return { success: false };
+        if (msg.name !== undefined) cat.name = msg.name;
+        if (msg.color !== undefined) cat.color = msg.color;
+        await migrateStorage(s);
+        await setupContextMenus();
         return { success: true };
       }
 

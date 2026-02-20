@@ -211,6 +211,24 @@ body {
 }
 .opt-cat-del:hover { color: var(--opt-danger); }
 
+.opt-cat-edit {
+  border: none; background: none; color: var(--opt-text-tertiary);
+  cursor: pointer; padding: 4px; border-radius: 4px; display: flex;
+  transition: color 0.12s;
+}
+.opt-cat-edit:hover { color: var(--opt-accent); }
+
+.opt-cat-item--editing {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.opt-cat-item--editing .opt-cat-input { flex: 1; min-width: 0; }
+
+.opt-edit-palette {
+  display: flex; gap: 6px; flex-wrap: wrap; width: 100%; padding: 4px 0 0;
+}
+.opt-edit-palette[hidden] { display: none; }
+
 .opt-cat-add-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
 
 .opt-cat-color-picker {

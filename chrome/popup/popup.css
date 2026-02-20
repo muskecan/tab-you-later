@@ -723,6 +723,52 @@ body.manual-sort .tyl-drag-handle { display: flex; }
 .tyl-note-del { border-color: var(--tyl-danger); color: var(--tyl-danger); }
 .tyl-note-del:hover { background: var(--tyl-danger); color: #fff; }
 
+.tyl-sc-dropdown {
+  position: fixed;
+  min-width: 160px;
+  max-width: 220px;
+  background: var(--tyl-bg);
+  border: 1px solid var(--tyl-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  z-index: 100;
+  padding: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.tyl-sc-dropdown[hidden] { display: none; }
+.tyl-sc-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: var(--tyl-text);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 5px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tyl-sc-opt:hover { background: var(--tyl-hover-bg); }
+.tyl-sc-opt--create { color: var(--tyl-accent); font-weight: 600; }
+.tyl-sc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.tyl-sc-sep {
+  height: 1px;
+  background: var(--tyl-border);
+  margin: 3px 6px;
+}
+
 .tyl-item--removing {
   animation: tyl-slide-out 0.18s ease-in forwards;
 }

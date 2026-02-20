@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="quick-category.css">
+</head>
+<body>
+  <div class="qc-container">
+    <h2 class="qc-title" id="qc-title">Create Category</h2>
+    <div class="qc-field">
+      <input type="text" id="qc-name" class="qc-input" placeholder="Category name" maxlength="30" autofocus>
+    </div>
+    <div class="qc-palette" id="qc-palette"></div>
+    <label class="qc-check-row" id="qc-save-page-row">
+      <input type="checkbox" id="qc-save-page" class="qc-checkbox">
+      <span id="qc-save-page-label">Save current page to this category</span>
+    </label>
+    <div class="qc-actions">
+      <button id="qc-save" class="qc-btn qc-btn--save" disabled>Save</button>
+      <button id="qc-cancel" class="qc-btn qc-btn--cancel">Cancel</button>
+    </div>
+    <div id="qc-error" class="qc-error" hidden></div>
+  </div>
+  <script src="../i18n/translations.js"></script>
+  <script src="../i18n/i18n.js"></script>
+  <script src="quick-category.js"></script>
+</body>
+</html>
