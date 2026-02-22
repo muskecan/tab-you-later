@@ -441,6 +441,17 @@ browser.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         return { success: true };
       }
 
+      case "deleteCategory": {
+        const s = await getSettings();
+        s.categories = (s.categories || []).filter((c) => c.id !== msg.id);
+        const items = await getItems();
+        items.forEach((item) => { if (item.category === msg.id) item.category = null; });
+        await saveItems(items);
+        await migrateStorage(s);
+        await setupContextMenus();
+        return { success: true };
+      }
+
       case "saveAndCloseCurrentTab": {
         const tabs = await browser.tabs.query({ active: true, currentWindow: true });
         if (!tabs[0]) return { success: false };
