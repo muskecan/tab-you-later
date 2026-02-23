@@ -1,4 +1,6 @@
-:root {
+:root,
+:root[data-theme="light"],
+:root[data-theme="auto"] {
   --opt-bg: #f0f0f4;
   --opt-card-bg: #ffffff;
   --opt-text: #15141a;
@@ -17,7 +19,8 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]),
+  :root[data-theme="auto"] {
     --opt-bg: #1c1b22;
     --opt-card-bg: #2b2a33;
     --opt-text: #fbfbfe;
@@ -34,6 +37,24 @@
     --opt-toggle-on: #00ddff;
     --opt-shadow: 0 2px 12px rgba(0,0,0,0.2);
   }
+}
+
+:root[data-theme="dark"] {
+  --opt-bg: #1c1b22;
+  --opt-card-bg: #2b2a33;
+  --opt-text: #fbfbfe;
+  --opt-text-secondary: #cfcfd8;
+  --opt-text-tertiary: #8f8f9d;
+  --opt-accent: #00ddff;
+  --opt-accent-hover: #80ebff;
+  --opt-border: #3e3c46;
+  --opt-danger: #ff6680;
+  --opt-danger-hover: #ff4f5e;
+  --opt-success-bg: #1a3a2a;
+  --opt-success-text: #80e080;
+  --opt-toggle-off: #52525e;
+  --opt-toggle-on: #00ddff;
+  --opt-shadow: 0 2px 12px rgba(0,0,0,0.2);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -155,9 +176,13 @@ body {
 .opt-encrypt-status.locked::before { background: #856404; }
 
 @media (prefers-color-scheme: dark) {
-  .opt-encrypt-status.locked { background: #3d3522; color: #ffc107; }
-  .opt-encrypt-status.locked::before { background: #ffc107; }
+  :root:not([data-theme]) .opt-encrypt-status.locked,
+  :root[data-theme="auto"] .opt-encrypt-status.locked { background: #3d3522; color: #ffc107; }
+  :root:not([data-theme]) .opt-encrypt-status.locked::before,
+  :root[data-theme="auto"] .opt-encrypt-status.locked::before { background: #ffc107; }
 }
+:root[data-theme="dark"] .opt-encrypt-status.locked { background: #3d3522; color: #ffc107; }
+:root[data-theme="dark"] .opt-encrypt-status.locked::before { background: #ffc107; }
 
 .opt-encrypt-form { display: flex; gap: 8px; align-items: center; }
 .opt-encrypt-form .opt-cat-input { max-width: 220px; }

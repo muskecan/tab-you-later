@@ -2,6 +2,8 @@ const COLORS = typeof TYL_CATEGORY_COLORS !== "undefined"
   ? TYL_CATEGORY_COLORS
   : ["#0060df","#058b00","#e27900","#e22850","#7542e5","#00b3a4","#e362a0","#4a6785"];
 
+const TOTAL_STEPS = 4;
+
 let currentStep = 1;
 let lang = "en";
 let createdCategories = [];
@@ -10,6 +12,8 @@ let selectedCatColor = COLORS[0];
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 
+tylInitTheme();
+
 document.addEventListener("DOMContentLoaded", async () => {
   lang = tylDetectBrowserLang();
   tylApplyI18n(lang);
@@ -17,12 +21,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupEncryptionToggle();
   setupNotificationStep();
   setupCategoryStep();
+  await setupThemeStep();
   updateNav();
 });
 
 function goToStep(n) {
   currentStep = n;
-  [1, 2, 3].forEach((i) => {
+  Array.from({ length: TOTAL_STEPS }, (_, idx) => idx + 1).forEach((i) => {
     const el = $(`#step-${i}`);
     el.hidden = i !== n;
   });
@@ -41,13 +46,13 @@ function updateNav() {
   const skip = $("#ob-skip-btn");
 
   back.hidden = currentStep === 1;
-  next.hidden = currentStep === 3;
-  finish.hidden = currentStep !== 3;
+  next.hidden = currentStep === TOTAL_STEPS;
+  finish.hidden = currentStep !== TOTAL_STEPS;
   skip.hidden = currentStep === 1;
 }
 
 $("#ob-next-btn").addEventListener("click", () => {
-  if (currentStep < 3) goToStep(currentStep + 1);
+  if (currentStep < TOTAL_STEPS) goToStep(currentStep + 1);
 });
 
 $("#ob-back-btn").addEventListener("click", () => {
@@ -55,7 +60,7 @@ $("#ob-back-btn").addEventListener("click", () => {
 });
 
 $("#ob-skip-btn").addEventListener("click", () => {
-  if (currentStep < 3) goToStep(currentStep + 1);
+  if (currentStep < TOTAL_STEPS) goToStep(currentStep + 1);
   else finishOnboarding();
 });
 
@@ -181,6 +186,31 @@ function setupCategoryStep() {
   });
 }
 
+async function setupThemeStep() {
+  const themeInputs = $$('input[name="theme"]');
+  let initialTheme = "auto";
+
+  try {
+    const resp = await browser.runtime.sendMessage({ action: "getSettings" });
+    initialTheme = tylNormalizeThemeMode(resp.settings && resp.settings.themeMode);
+  } catch {
+    initialTheme = "auto";
+  }
+
+  const selected = document.querySelector(`input[name="theme"][value="${initialTheme}"]`)
+    || document.querySelector('input[name="theme"][value="auto"]');
+  if (selected) selected.checked = true;
+  tylApplyTheme(selected ? selected.value : "auto");
+
+  themeInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      if (input.checked) {
+        tylApplyTheme(input.value);
+      }
+    });
+  });
+}
+
 function renderCatList() {
   const list = $("#ob-cat-list");
   list.innerHTML = "";
@@ -227,11 +257,13 @@ async function finishOnboarding() {
   const remindersEnabled = !$("#ob-reminders-toggle").disabled && $("#ob-reminders-toggle").checked;
   const dailySummaryEnabled = remindersEnabled ? $("#ob-daily-toggle").checked : true;
   const dailyReminderTime = remindersEnabled && dailySummaryEnabled ? $("#ob-daily-time").value || "20:00" : "20:00";
+  const themeMode = tylNormalizeThemeMode((document.querySelector('input[name="theme"]:checked') || {}).value);
 
   const settings = {
     syncEnabled,
     autoDelete: false,
     language: lang,
+    themeMode,
     remindersEnabled,
     dailySummaryEnabled,
     dailyReminderTime

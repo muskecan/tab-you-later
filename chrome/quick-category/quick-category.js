@@ -2,6 +2,8 @@ const COLORS = typeof TYL_CATEGORY_COLORS !== "undefined"
   ? TYL_CATEGORY_COLORS
   : ["#0060df","#058b00","#e27900","#e22850","#7542e5","#00b3a4","#e362a0","#4a6785"];
 
+tylInitTheme();
+
 const QC_T = {
   en: { title: "Create Category", placeholder: "Category name", save: "Save", cancel: "Cancel", empty: "Enter a name", duplicate: "Category already exists", savePage: "Save current page to this category" },
   tr: { title: "Kategori Oluştur", placeholder: "Kategori adı", save: "Kaydet", cancel: "İptal", empty: "Bir ad girin", duplicate: "Bu kategori zaten var", savePage: "Mevcut sayfayı bu kategoriye kaydet" },
@@ -16,8 +18,12 @@ let selectedColor = COLORS[0];
 let lang = "en";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const resp = await chrome.runtime.sendMessage({ action: "getLang" });
-  lang = resp.lang || "en";
+  const [langResp, settingsResp] = await Promise.all([
+    chrome.runtime.sendMessage({ action: "getLang" }),
+    chrome.runtime.sendMessage({ action: "getSettings" }),
+  ]);
+  lang = langResp.lang || "en";
+  tylApplyTheme(settingsResp.settings && settingsResp.settings.themeMode);
   const t = QC_T[lang] || QC_T.en;
 
   document.getElementById("qc-title").textContent = t.title;

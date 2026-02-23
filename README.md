@@ -46,8 +46,8 @@ tab-you-later/
 
 ## Current Version
 
-- Firefox: `1.0.3`
-- Chrome: `1.0.3`
+- Firefox: `1.0.4`
+- Chrome: `1.0.4`
 
 ## Shared Feature Set
 
@@ -93,7 +93,7 @@ tab-you-later/
 - Optional AES-GCM local encryption with session passphrase
 - Network-minimized favicon mode (off / live / cached)
 - No external servers — all data stays in browser-managed storage
-- Dark / light mode adapts to system theme
+- Theme modes: auto (follows browser/system), light, or dark (user-selectable and persistent)
 
 ### Data Management
 
@@ -102,7 +102,7 @@ tab-you-later/
 - Auto-delete on open
 - Auto-expire items older than a configurable number of days
 - 5-second undo delete
-- Onboarding page on first install
+- Onboarding page on first install, including a final theme selection step
 
 ### Internationalization
 

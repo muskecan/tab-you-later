@@ -31,6 +31,7 @@
         <div class="ob-dot active" data-step="1"></div>
         <div class="ob-dot" data-step="2"></div>
         <div class="ob-dot" data-step="3"></div>
+        <div class="ob-dot" data-step="4"></div>
       </div>
 
       <!-- Step 1: Storage + Encryption -->
@@ -137,6 +138,64 @@
           <div id="ob-cat-list" class="ob-cat-list">
             <p id="ob-cat-empty" class="ob-hint" data-i18n="onboarding_cat_empty">No categories yet. Add one above!</p>
           </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Theme -->
+      <div class="ob-step" id="step-4" hidden>
+        <div class="ob-section">
+          <h2 class="ob-section-title" data-i18n="onboarding_theme_title">Choose your theme</h2>
+          <p class="ob-section-desc" data-i18n="onboarding_theme_desc">Auto follows your browser theme. You can force Light or Dark anytime.</p>
+
+          <label class="ob-option">
+            <input type="radio" name="theme" value="auto" checked>
+            <div class="ob-option-body">
+              <div class="ob-option-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M18.2 7.4A7 7 0 0 0 6 7.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M6 4V7.1H9.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5.8 16.6A7 7 0 0 0 18 16.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M18 20V16.9H14.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="12" cy="12" r="2.4" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+              </div>
+              <div class="ob-option-text">
+                <strong data-i18n="theme_auto">Auto</strong>
+                <span data-i18n="onboarding_theme_auto_desc">Follow your browser's light/dark appearance.</span>
+              </div>
+            </div>
+          </label>
+
+          <label class="ob-option">
+            <input type="radio" name="theme" value="light">
+            <div class="ob-option-body">
+              <div class="ob-option-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="3.6" stroke="currentColor" stroke-width="1.6"/>
+                  <path d="M12 3.2V5.3M12 18.7V20.8M3.2 12H5.3M18.7 12H20.8M5.8 5.8L7.3 7.3M16.7 16.7L18.2 18.2M5.8 18.2L7.3 16.7M16.7 7.3L18.2 5.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="ob-option-text">
+                <strong data-i18n="theme_light">Light</strong>
+                <span data-i18n="onboarding_theme_light_desc">Always use the light theme.</span>
+              </div>
+            </div>
+          </label>
+
+          <label class="ob-option">
+            <input type="radio" name="theme" value="dark">
+            <div class="ob-option-body">
+              <div class="ob-option-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M15.2 3.2A8.8 8.8 0 1018.8 19 8.3 8.3 0 0115.2 3.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="ob-option-text">
+                <strong data-i18n="theme_dark">Dark</strong>
+                <span data-i18n="onboarding_theme_dark_desc">Always use the dark theme.</span>
+              </div>
+            </div>
+          </label>
         </div>
       </div>
 

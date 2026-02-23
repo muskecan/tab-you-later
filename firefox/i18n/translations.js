@@ -90,6 +90,11 @@ const TYL_TRANSLATIONS = {
     onboarding_cat_placeholder: "Category name",
     onboarding_cat_add: "Add",
     onboarding_cat_empty: "No categories yet. Add one above!",
+    onboarding_theme_title: "Choose your theme",
+    onboarding_theme_desc: "Auto follows your browser theme. You can force Light or Dark anytime.",
+    onboarding_theme_auto_desc: "Follow your browser's light/dark appearance.",
+    onboarding_theme_light_desc: "Always use the light theme.",
+    onboarding_theme_dark_desc: "Always use the dark theme.",
 
     options_title: "Settings",
     options_brand: "Tab You Later",
@@ -99,6 +104,11 @@ const TYL_TRANSLATIONS = {
 
     options_badge_title: "Item Count Badge",
     options_badge_desc: "Show the number of saved items on the toolbar icon.",
+    options_theme_title: "Theme",
+    options_theme_desc: "Choose how the extension UI should appear.",
+    theme_auto: "Auto",
+    theme_light: "Light",
+    theme_dark: "Dark",
 
     options_favicon_title: "Favicons",
     options_favicon_desc: "Display website icons next to saved links.",

@@ -62,7 +62,7 @@ Built on Manifest V3 with a service worker background and `chrome.storage.sessio
 - **Optional Local Encryption** — AES-GCM encryption with PBKDF2 key derivation; passphrase persisted in session storage so it survives service worker restarts without re-prompting
 - **Network-Minimized Favicon Mode** — Three modes: off, live (fetched on view), or cached (stored as data URL on save)
 - **No External Servers** — All data stays in Chrome's local or sync storage APIs
-- **Dark / Light Mode** — Seamlessly adapts to your system or Chrome theme
+- **Theme Modes (Auto / Light / Dark)** — Auto follows system/Chrome theme; users can force a persistent Light or Dark mode from onboarding or Settings
 
 ### Data Management
 
@@ -72,7 +72,7 @@ Built on Manifest V3 with a service worker background and `chrome.storage.sessio
 - **Auto-Expire** — Remove items older than a configurable number of days (non-retroactive)
 - **Undo Delete** — 5-second undo toast after deleting single or multiple items
 - **Duplicate Detection** — Visual cue when trying to save a link that already exists
-- **Onboarding** — Introductory page on first install
+- **Onboarding** — Introductory page on first install, ending with theme selection (Auto / Light / Dark)
 
 ### Internationalization
 
@@ -106,7 +106,7 @@ Language is auto-detected from the browser and can be changed manually in Settin
 12. **Bulk actions** — Click the grid icon to enter select mode, then open or delete selected items
 13. **Edit categories** — Open Settings to rename or recolor existing categories
 14. **Encryption** — Enable in Settings with a passphrase; unlock once per browser session
-15. **Settings** — Click the gear icon in the popup to configure all options
+15. **Settings** — Click the gear icon in the popup to configure all options, including theme mode
 
 ## Chrome-Specific Notes
 

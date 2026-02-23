@@ -1,4 +1,6 @@
-:root {
+:root,
+:root[data-theme="light"],
+:root[data-theme="auto"] {
   --qc-bg: #fff;
   --qc-text: #1b1b1f;
   --qc-text-secondary: #5b5b66;
@@ -9,7 +11,8 @@
   --qc-surface: #f9f9fb;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]),
+  :root[data-theme="auto"] {
     --qc-bg: #2b2a33;
     --qc-text: #fbfbfe;
     --qc-text-secondary: #cfcfd8;
@@ -19,6 +22,16 @@
     --qc-hover: #3a3944;
     --qc-surface: #32313c;
   }
+}
+:root[data-theme="dark"] {
+  --qc-bg: #2b2a33;
+  --qc-text: #fbfbfe;
+  --qc-text-secondary: #cfcfd8;
+  --qc-border: #52525e;
+  --qc-accent: #0df;
+  --qc-danger: #ff6b8a;
+  --qc-hover: #3a3944;
+  --qc-surface: #32313c;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {

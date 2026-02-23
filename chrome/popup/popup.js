@@ -1,6 +1,8 @@
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
+tylInitTheme();
+
 const DOM = {
   search: $("#search-input"),
   list: $("#items-list"),
@@ -36,6 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   ]);
   currentLang = langResp.lang;
   settings = settingsResp.settings;
+  tylApplyTheme(settings.themeMode);
 
   tylApplyI18n(currentLang);
   applySortOptionLabels();
@@ -78,6 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (changes.settings) {
       const resp = await chrome.runtime.sendMessage({ action: "getSettings" });
       settings = resp.settings;
+      tylApplyTheme(settings.themeMode);
       renderCategoryBar();
     }
   });

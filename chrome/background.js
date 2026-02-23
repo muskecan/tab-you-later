@@ -25,6 +25,7 @@ const DEFAULT_SETTINGS = {
   syncEnabled: false,
   autoDelete: false,
   language: null,
+  themeMode: "auto",
   badgeEnabled: true,
   faviconMode: "off",
   autoExpireEnabled: false,

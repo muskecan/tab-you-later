@@ -1,8 +1,11 @@
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
+tylInitTheme();
+
 const DOM = {
   langSelect: $("#language-select"),
+  themeSelect: $("#theme-select"),
   badgeToggle: $("#badge-toggle"),
   faviconModeSelect: $("#favicon-mode-select"),
   syncToggle: $("#sync-toggle"),
@@ -45,10 +48,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const resp = await chrome.runtime.sendMessage({ action: "getSettings" });
   settings = resp.settings;
 
+  const themeMode = tylNormalizeThemeMode(settings.themeMode);
   DOM.langSelect.value = currentLang;
+  DOM.themeSelect.value = themeMode;
   DOM.badgeToggle.checked = settings.badgeEnabled !== false;
   DOM.faviconModeSelect.value = settings.faviconMode || "off";
+  applyThemeModeLabels();
   applyFaviconModeLabels();
+  tylApplyTheme(themeMode);
   DOM.syncToggle.checked = settings.syncEnabled === true;
   DOM.autoDeleteToggle.checked = settings.autoDelete === true;
   DOM.autoExpireToggle.checked = settings.autoExpireEnabled === true;
@@ -59,6 +66,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   await refreshReminderUI();
 
   DOM.langSelect.addEventListener("change", onLangChange);
+  DOM.themeSelect.addEventListener("change", () => {
+    settings.themeMode = tylNormalizeThemeMode(DOM.themeSelect.value);
+    tylApplyTheme(settings.themeMode);
+    save();
+  });
   DOM.badgeToggle.addEventListener("change", () => { settings.badgeEnabled = DOM.badgeToggle.checked; save(); });
   DOM.faviconModeSelect.addEventListener("change", () => { settings.faviconMode = DOM.faviconModeSelect.value; save(); });
   DOM.syncToggle.addEventListener("change", () => { settings.syncEnabled = DOM.syncToggle.checked; save(); });
@@ -103,8 +115,16 @@ async function onLangChange() {
   currentLang = DOM.langSelect.value;
   settings.language = currentLang;
   tylApplyI18n(currentLang);
+  applyThemeModeLabels();
   applyFaviconModeLabels();
   await save();
+}
+
+function applyThemeModeLabels() {
+  DOM.themeSelect.querySelectorAll("option").forEach((opt) => {
+    const key = opt.dataset.i18nText;
+    if (key) opt.textContent = tylT(key, currentLang);
+  });
 }
 
 function applyFaviconModeLabels() {
