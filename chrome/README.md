@@ -4,6 +4,10 @@ A focused Chrome extension that helps you tame tab overload. Save pages and link
 
 Built on Manifest V3 with a service worker background and `chrome.storage.session` for resilient session state.
 
+## Current Version
+
+`1.0.6`
+
 ## Install
 
 > **Chrome Web Store:** [https://chromewebstore.google.com/detail/tab-you-later/hhggidekeifkiafeoclfjmhfdboehiib](https://chromewebstore.google.com/detail/tab-you-later/hhggidekeifkiafeoclfjmhfdboehiib)

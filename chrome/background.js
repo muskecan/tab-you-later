@@ -40,6 +40,9 @@ const DEFAULT_SETTINGS = {
   dailyReminderTime: "20:00"
 };
 
+const SETTINGS_KEY = "settings";
+const SYNC_SETTINGS_KEY = "tylSettings";
+
 function detectBrowserLang() {
   const code = (navigator.language || "en").split("-")[0].toLowerCase();
   return SUPPORTED_LANGS.includes(code) ? code : DEFAULT_LANG;
@@ -56,11 +59,100 @@ async function getStorageArea() {
   return s.syncEnabled ? chrome.storage.sync : chrome.storage.local;
 }
 
-async function getSettings() {
-  const { settings } = await chrome.storage.local.get("settings");
-  const merged = { ...DEFAULT_SETTINGS, ...(settings || {}) };
-  if (!merged.faviconMode && settings && settings.faviconEnabled) {
+function normalizeSettings(rawSettings) {
+  const raw = rawSettings || {};
+  const merged = { ...DEFAULT_SETTINGS, ...raw };
+  if (!merged.faviconMode && raw && raw.faviconEnabled) {
     merged.faviconMode = "live";
+  }
+  delete merged.faviconEnabled;
+  return merged;
+}
+
+function mergeCategories(localCategories, syncCategories) {
+  const merged = [];
+  const upsert = (cat) => {
+    if (!cat || typeof cat !== "object") return;
+    const name = String(cat.name || "").trim();
+    if (!name) return;
+    const normalized = {
+      id: cat.id || uuidv4(),
+      name,
+      color: cat.color || "#5b5b66",
+    };
+    const existingIndex = merged.findIndex((c) =>
+      c.id === normalized.id
+      || String(c.name || "").toLowerCase() === normalized.name.toLowerCase());
+    if (existingIndex >= 0) merged[existingIndex] = normalized;
+    else merged.push(normalized);
+  };
+
+  (syncCategories || []).forEach(upsert);
+  (localCategories || []).forEach(upsert);
+  return merged;
+}
+
+function mergeSettingsForSync(localSettings, syncSettings) {
+  const local = normalizeSettings(localSettings);
+  const sync = normalizeSettings(syncSettings);
+  const merged = {
+    ...sync,
+    ...local,
+    syncEnabled: true,
+  };
+  merged.categories = mergeCategories(local.categories, sync.categories);
+  return normalizeSettings(merged);
+}
+
+async function getSyncSettingsStrict() {
+  try {
+    const data = await chrome.storage.sync.get(SYNC_SETTINGS_KEY);
+    const raw = data[SYNC_SETTINGS_KEY];
+    if (!raw || typeof raw !== "object") return null;
+    return normalizeSettings(raw);
+  } catch (error) {
+    throw wrapStoreError("sync", "read", error);
+  }
+}
+
+async function saveSyncSettingsStrict(settings) {
+  try {
+    await chrome.storage.sync.set({ [SYNC_SETTINGS_KEY]: normalizeSettings(settings) });
+  } catch (error) {
+    throw wrapStoreError("sync", "write", error);
+  }
+}
+
+async function saveLocalSettings(settings) {
+  await chrome.storage.local.set({ [SETTINGS_KEY]: normalizeSettings(settings) });
+}
+
+async function persistSettings(settings, syncIfEnabled = true) {
+  const normalized = normalizeSettings(settings);
+  await saveLocalSettings(normalized);
+  if (syncIfEnabled && normalized.syncEnabled) {
+    await saveSyncSettingsStrict(normalized);
+  }
+  return normalized;
+}
+
+async function getSettings() {
+  const { [SETTINGS_KEY]: localRaw } = await chrome.storage.local.get(SETTINGS_KEY);
+  const localSettings = normalizeSettings(localRaw);
+
+  if (!localSettings.syncEnabled) return localSettings;
+
+  let syncSettings = null;
+  try {
+    syncSettings = await getSyncSettingsStrict();
+  } catch {
+    return localSettings;
+  }
+  if (!syncSettings) return localSettings;
+
+  const merged = normalizeSettings({ ...syncSettings, syncEnabled: true });
+  if (JSON.stringify(localSettings) !== JSON.stringify(merged)) {
+    await chrome.storage.local.set({ [SETTINGS_KEY]: merged });
   }
   return merged;
 }
@@ -73,6 +165,85 @@ function uuidv4() {
 }
 
 let _derivedKey = null;
+
+function runtimeError(code, cause) {
+  const err = new Error(code);
+  err.code = code;
+  if (cause) err.cause = cause;
+  return err;
+}
+
+function normalizeRuntimeError(error) {
+  if (error && error.code) return error.code;
+  const msg = String((error && error.message) || error || "").toLowerCase();
+  if (msg.includes("quota")) return "sync_quota_exceeded";
+  if (msg.includes("sync") && msg.includes("read")) return "sync_read_failed";
+  if (msg.includes("sync") && msg.includes("write")) return "sync_write_failed";
+  if (msg.includes("decrypt")) return "decrypt_failed";
+  if (msg.includes("locked")) return "encryption_locked";
+  if (msg.includes("wrong_passphrase")) return "wrong_passphrase";
+  return "sync_migration_failed";
+}
+
+function isEnvelope(raw) {
+  return !!raw
+    && typeof raw === "object"
+    && Array.isArray(raw.iv)
+    && Array.isArray(raw.data);
+}
+
+function getStoreByName(storeName) {
+  return storeName === "sync" ? chrome.storage.sync : chrome.storage.local;
+}
+
+function currentStoreNameFromSettings(settings) {
+  return settings.syncEnabled ? "sync" : "local";
+}
+
+function wrapStoreError(storeName, operation, error) {
+  if (error && error.code) return error;
+  if (storeName === "sync") {
+    const msg = String((error && error.message) || error || "").toLowerCase();
+    if (msg.includes("quota")) return runtimeError("sync_quota_exceeded", error);
+    if (operation === "read") return runtimeError("sync_read_failed", error);
+    if (operation === "write") return runtimeError("sync_write_failed", error);
+  }
+  return runtimeError("sync_migration_failed", error);
+}
+
+function itemCreatedAt(item) {
+  const ts = Number(item && item.createdAt);
+  return Number.isFinite(ts) ? ts : 0;
+}
+
+function mergeItemsByUrl(localItems, syncItems) {
+  const byUrl = new Map();
+  const extras = [];
+  const seenExtraIds = new Set();
+
+  const visit = (items) => {
+    for (const item of (items || [])) {
+      if (!item || typeof item !== "object") continue;
+      if (!item.url) {
+        if (item.id) {
+          if (seenExtraIds.has(item.id)) continue;
+          seenExtraIds.add(item.id);
+        }
+        extras.push(item);
+        continue;
+      }
+      const existing = byUrl.get(item.url);
+      if (!existing || itemCreatedAt(item) >= itemCreatedAt(existing)) {
+        byUrl.set(item.url, item);
+      }
+    }
+  };
+
+  visit(syncItems);
+  visit(localItems);
+
+  return [...byUrl.values(), ...extras].sort((a, b) => itemCreatedAt(b) - itemCreatedAt(a));
+}
 
 async function ensureDerivedKey() {
   if (_derivedKey) return _derivedKey;
@@ -113,34 +284,116 @@ async function decryptPayload(envelope, key) {
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
+async function ensureWritableKeyOrThrow(settings) {
+  if (!settings.encryptionEnabled) return null;
+  const key = await ensureDerivedKey();
+  if (!key) throw runtimeError("encryption_locked");
+  return key;
+}
+
+async function getRawStoredFromArea(storeArea, storeName = null) {
+  try {
+    const d = await storeArea.get("tylItems");
+    return d.tylItems;
+  } catch (error) {
+    if (storeName) throw wrapStoreError(storeName, "read", error);
+    throw error;
+  }
+}
+
+async function readItemsStrictFromStore(storeArea, settings, requireUnlocked = true, storeName = null) {
+  const raw = await getRawStoredFromArea(storeArea, storeName);
+  if (raw == null) return [];
+  if (!settings.encryptionEnabled) return Array.isArray(raw) ? raw : [];
+
+  if (!isEnvelope(raw)) {
+    return Array.isArray(raw) ? raw : [];
+  }
+
+  let key = null;
+  if (requireUnlocked) {
+    key = await ensureWritableKeyOrThrow(settings);
+  } else {
+    key = await ensureDerivedKey();
+    if (!key) return [];
+  }
+
+  let items;
+  try {
+    items = await decryptPayload(raw, key);
+  } catch {
+    throw runtimeError("decrypt_failed");
+  }
+  if (!Array.isArray(items)) throw runtimeError("decrypt_failed");
+  return items;
+}
+
+async function writeItemsToStore(storeArea, settings, items, storeName = null) {
+  try {
+    if (settings.encryptionEnabled) {
+      const key = await ensureWritableKeyOrThrow(settings);
+      const envelope = await encryptPayload(items, key);
+      await storeArea.set({ tylItems: envelope });
+      return;
+    }
+    await storeArea.set({ tylItems: items });
+  } catch (error) {
+    if (storeName) throw wrapStoreError(storeName, "write", error);
+    throw error;
+  }
+}
+
+async function deriveAndValidatePassphrase(passphrase, settings) {
+  if (!settings.encryptionEnabled || !settings.encryptionSalt) throw runtimeError("not_enabled");
+
+  let key = null;
+  try {
+    const salt = new Uint8Array(settings.encryptionSalt);
+    key = await deriveKey(passphrase, salt);
+  } catch {
+    throw runtimeError("wrong_passphrase");
+  }
+
+  const storeName = currentStoreNameFromSettings(settings);
+  const store = getStoreByName(storeName);
+  const raw = await getRawStoredFromArea(store, storeName === "sync" ? "sync" : null);
+
+  if (!raw || !isEnvelope(raw)) {
+    if (!raw) console.warn("TYL encryption enabled with empty payload; allowing unlock.");
+    return { key, items: Array.isArray(raw) ? raw : [] };
+  }
+
+  let items;
+  try {
+    items = await decryptPayload(raw, key);
+  } catch {
+    throw runtimeError("wrong_passphrase");
+  }
+  if (!Array.isArray(items)) throw runtimeError("wrong_passphrase");
+  return { key, items };
+}
+
 async function getRawStored() {
   const store = await getStorageArea();
-  const d = await store.get("tylItems");
-  return d.tylItems;
+  return getRawStoredFromArea(store);
 }
 
 async function getItems() {
-  const raw = await getRawStored();
-  if (!raw) return [];
   const s = await getSettings();
-  if (s.encryptionEnabled && raw.iv) {
-    const key = await ensureDerivedKey();
-    if (!key) return [];
-    try { return await decryptPayload(raw, key); } catch { return []; }
+  const storeName = currentStoreNameFromSettings(s);
+  const store = getStoreByName(storeName);
+  try {
+    return await readItemsStrictFromStore(store, s, false, storeName === "sync" ? "sync" : null);
+  } catch {
+    return [];
   }
-  return Array.isArray(raw) ? raw : [];
 }
 
 async function saveItems(items) {
-  const store = await getStorageArea();
   const s = await getSettings();
-  const key = await ensureDerivedKey();
-  if (s.encryptionEnabled && key) {
-    const envelope = await encryptPayload(items, key);
-    await store.set({ tylItems: envelope });
-  } else {
-    await store.set({ tylItems: items });
-  }
+  const storeName = currentStoreNameFromSettings(s);
+  const store = getStoreByName(storeName);
+  await writeItemsToStore(store, s, items, storeName === "sync" ? "sync" : null);
   await updateBadge(items.length);
 }
 
@@ -395,7 +648,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
 chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === "install") {
-    const { settings } = await chrome.storage.local.get("settings");
+    const { [SETTINGS_KEY]: settings } = await chrome.storage.local.get(SETTINGS_KEY);
     if (!settings) chrome.tabs.create({ url: chrome.runtime.getURL("onboarding/onboarding.html") });
   }
   await setupContextMenus();
@@ -432,8 +685,35 @@ chrome.alarms.onAlarm.addListener((a) => {
   else if (a.name.startsWith(ALARM_ITEM_PREFIX)) { showItemReminderNotification(a.name.replace(ALARM_ITEM_PREFIX, "")); }
 });
 
+const ENCRYPTION_WRITE_ACTIONS = new Set([
+  "createCategory",
+  "updateCategory",
+  "deleteCategory",
+  "saveAndCloseCurrentTab",
+  "softDeleteItem",
+  "softDeleteItems",
+  "undoDelete",
+  "deleteItem",
+  "deleteItems",
+  "updateItemPinned",
+  "updateItemCategory",
+  "updateItemNote",
+  "reorderItems",
+  "saveAllTabs",
+  "importItems",
+  "setItemReminder",
+  "clearItemReminder",
+]);
+
+async function ensureActionWritable(action) {
+  if (!ENCRYPTION_WRITE_ACTIONS.has(action)) return;
+  const s = await getSettings();
+  await ensureWritableKeyOrThrow(s);
+}
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const handle = async () => {
+    await ensureActionWritable(msg.action);
     switch (msg.action) {
 
       case "getItems":
@@ -634,13 +914,15 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         const s = await getSettings();
         if (!s.encryptionEnabled || !s.encryptionSalt) return { success: false, error: "not_enabled" };
         try {
-          const salt = new Uint8Array(s.encryptionSalt);
-          _derivedKey = await deriveKey(msg.passphrase, salt);
-          const items = await getItems();
-          if (!Array.isArray(items)) { _derivedKey = null; return { success: false, error: "wrong_passphrase" }; }
+          const validated = await deriveAndValidatePassphrase(msg.passphrase, s);
+          _derivedKey = validated.key;
           await chrome.storage.session.set({ _sessionPassphrase: msg.passphrase });
           return { success: true };
-        } catch { _derivedKey = null; return { success: false, error: "wrong_passphrase" }; }
+        } catch (error) {
+          _derivedKey = null;
+          await chrome.storage.session.remove("_sessionPassphrase");
+          return { success: false, error: normalizeRuntimeError(error) };
+        }
       }
 
       case "enableEncryption": {
@@ -650,7 +932,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         const s = await getSettings();
         s.encryptionEnabled = true;
         s.encryptionSalt = Array.from(salt);
-        await chrome.storage.local.set({ settings: { ...DEFAULT_SETTINGS, ...s } });
+        await persistSettings(s, true);
         await chrome.storage.session.set({ _sessionPassphrase: msg.passphrase });
         await saveItems(items);
         return { success: true };
@@ -658,19 +940,30 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
       case "disableEncryption": {
         const s = await getSettings();
-        if (!_derivedKey) {
-          try { const salt = new Uint8Array(s.encryptionSalt); _derivedKey = await deriveKey(msg.passphrase, salt); }
-          catch { return { success: false, error: "wrong_passphrase" }; }
+        if (!s.encryptionEnabled || !s.encryptionSalt) return { success: false, error: "not_enabled" };
+
+        let validated;
+        try {
+          validated = await deriveAndValidatePassphrase(msg.passphrase, s);
+        } catch (error) {
+          return { success: false, error: normalizeRuntimeError(error) };
         }
-        const items = await getItems();
+
+        const storeName = currentStoreNameFromSettings(s);
+        const store = getStoreByName(storeName);
+        try {
+          await store.set({ tylItems: validated.items });
+        } catch (error) {
+          if (storeName === "sync") throw wrapStoreError("sync", "write", error);
+          throw error;
+        }
+
         s.encryptionEnabled = false;
         s.encryptionSalt = null;
         _derivedKey = null;
         await chrome.storage.session.remove("_sessionPassphrase");
-        await chrome.storage.local.set({ settings: { ...DEFAULT_SETTINGS, ...s } });
-        const store = await getStorageArea();
-        await store.set({ tylItems: items });
-        await updateBadge(items.length);
+        await persistSettings(s, true);
+        await updateBadge(validated.items.length);
         return { success: true };
       }
 
@@ -708,32 +1001,56 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         return {};
     }
   };
-  handle().then(sendResponse);
+  handle()
+    .then(sendResponse)
+    .catch((error) => sendResponse({ success: false, error: normalizeRuntimeError(error) }));
   return true;
 });
 
 async function migrateStorage(newSettings) {
   const oldSettings = await getSettings();
-  const items = await getItems();
-  const merged = { ...DEFAULT_SETTINGS, ...newSettings };
-  delete merged.faviconEnabled;
-  await chrome.storage.local.set({ settings: merged });
+  const merged = normalizeSettings(newSettings);
 
-  if (oldSettings.syncEnabled !== merged.syncEnabled) {
+  const toSync = !oldSettings.syncEnabled && merged.syncEnabled;
+  const toLocal = oldSettings.syncEnabled && !merged.syncEnabled;
+
+  if (!toSync && !toLocal) {
     if (merged.syncEnabled) {
-      const key = await ensureDerivedKey();
-      if (merged.encryptionEnabled && key) {
-        const envelope = await encryptPayload(items, key);
-        await chrome.storage.sync.set({ tylItems: envelope });
-      } else {
-        await chrome.storage.sync.set({ tylItems: items });
-      }
-      await chrome.storage.local.remove("tylItems");
+      const currentSyncSettings = await getSyncSettingsStrict();
+      const mergedSettings = mergeSettingsForSync(merged, currentSyncSettings || {});
+      await saveSyncSettingsStrict(mergedSettings);
+      await saveLocalSettings(mergedSettings);
     } else {
-      const syncData = await chrome.storage.sync.get("tylItems");
-      await chrome.storage.local.set({ tylItems: syncData.tylItems || [] });
-      await chrome.storage.sync.remove("tylItems");
+      await saveLocalSettings(merged);
     }
+    return;
+  }
+
+  if (oldSettings.encryptionEnabled) {
+    await ensureWritableKeyOrThrow(oldSettings);
+  }
+
+  const requireUnlocked = oldSettings.encryptionEnabled;
+  const localStore = chrome.storage.local;
+  const syncStore = chrome.storage.sync;
+
+  const localItems = await readItemsStrictFromStore(localStore, oldSettings, requireUnlocked, null);
+  const syncItems = await readItemsStrictFromStore(syncStore, oldSettings, requireUnlocked, "sync");
+  const mergedItems = mergeItemsByUrl(localItems, syncItems);
+  const existingSyncSettings = await getSyncSettingsStrict();
+
+  if (toSync) {
+    const settingsForSync = mergeSettingsForSync(merged, existingSyncSettings || {});
+    await writeItemsToStore(syncStore, settingsForSync, mergedItems, "sync");
+    await saveSyncSettingsStrict(settingsForSync);
+    await saveLocalSettings(settingsForSync);
+    return;
+  }
+
+  if (toLocal) {
+    const localSettings = normalizeSettings({ ...oldSettings, ...merged, syncEnabled: false });
+    await writeItemsToStore(localStore, localSettings, mergedItems, null);
+    await saveLocalSettings(localSettings);
   }
 }
 

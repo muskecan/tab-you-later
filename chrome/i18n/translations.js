@@ -183,6 +183,13 @@ const TYL_TRANSLATIONS = {
     options_clear_confirm: "All saved links will be permanently deleted. Are you sure?",
 
     options_saved: "Settings saved.",
+    error_encryption_locked_action: "Action blocked. Unlock encryption in Settings first.",
+    error_encryption_locked_popup: "Unlock encryption in Settings to continue.",
+    error_sync_migration_failed: "Sync mode change failed. Your data was left unchanged.",
+    error_sync_quota_exceeded: "Sync storage quota exceeded. Free some space and try again.",
+    error_sync_read_failed: "Failed to read sync data. Try again.",
+    error_sync_write_failed: "Failed to write sync data. Try again.",
+    error_decrypt_failed: "Encrypted data could not be decrypted.",
     options_cleared: "All data deleted.",
   },
 

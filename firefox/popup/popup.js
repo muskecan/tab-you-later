@@ -100,10 +100,45 @@ function applySortOptionLabels() {
   });
 }
 
-function onSortChange() {
+function runtimeErrorToMessageKey(errorCode) {
+  switch (errorCode) {
+    case "encryption_locked":
+      return "error_encryption_locked_popup";
+    case "sync_quota_exceeded":
+      return "error_sync_quota_exceeded";
+    case "sync_read_failed":
+      return "error_sync_read_failed";
+    case "sync_write_failed":
+      return "error_sync_write_failed";
+    case "decrypt_failed":
+      return "error_decrypt_failed";
+    default:
+      return "error_sync_migration_failed";
+  }
+}
+
+function showMutationError(errorCode) {
+  alert(tylT(runtimeErrorToMessageKey(errorCode), currentLang));
+}
+
+async function sendMutation(message, opts = {}) {
+  const resp = await browser.runtime.sendMessage(message);
+  if (resp && resp.success) return resp;
+  if (!opts.silent) showMutationError(resp && resp.error);
+  return resp || { success: false };
+}
+
+async function onSortChange() {
   settings.sortBy = DOM.sortSelect.value;
   document.body.classList.toggle("manual-sort", settings.sortBy === "manual");
-  browser.runtime.sendMessage({ action: "saveSettings", settings: { ...settings } });
+  const resp = await sendMutation({ action: "saveSettings", settings: { ...settings } }, { silent: true });
+  if (!resp.success) {
+    const fresh = await browser.runtime.sendMessage({ action: "getSettings" });
+    settings = fresh.settings;
+    DOM.sortSelect.value = settings.sortBy || "newest";
+    document.body.classList.toggle("manual-sort", settings.sortBy === "manual");
+    showMutationError(resp.error);
+  }
   renderList();
 }
 
@@ -419,7 +454,8 @@ function showCatDropdown(item, anchor) {
 
 async function assignCategory(id, catId) {
   DOM.catDropdown.hidden = true;
-  await browser.runtime.sendMessage({ action: "updateItemCategory", id, categoryId: catId });
+  const resp = await sendMutation({ action: "updateItemCategory", id, categoryId: catId });
+  if (!resp.success) return;
   const i = allItems.find((x) => x.id === id);
   if (i) i.category = catId;
   renderList();
@@ -429,7 +465,8 @@ async function assignCategory(id, catId) {
 
 async function togglePin(item) {
   const newVal = !item.pinned;
-  await browser.runtime.sendMessage({ action: "updateItemPinned", id: item.id, pinned: newVal });
+  const resp = await sendMutation({ action: "updateItemPinned", id: item.id, pinned: newVal });
+  if (!resp.success) return;
   item.pinned = newVal;
   renderList();
 }
@@ -437,7 +474,8 @@ async function togglePin(item) {
 // ─── Item Actions ────────────────────────────────────────
 
 async function openItem(item) {
-  await browser.runtime.sendMessage({ action: "openAndDelete", id: item.id, url: item.url });
+  const resp = await sendMutation({ action: "openAndDelete", id: item.id, url: item.url });
+  if (!resp.success) return;
   if (settings.autoDelete) {
     allItems = allItems.filter((i) => i.id !== item.id);
     renderList();
@@ -447,7 +485,11 @@ async function openItem(item) {
 async function softDeleteItem(id, el) {
   el.classList.add("tyl-item--removing");
   el.addEventListener("animationend", async () => {
-    const resp = await browser.runtime.sendMessage({ action: "softDeleteItem", id });
+    const resp = await sendMutation({ action: "softDeleteItem", id });
+    if (!resp.success) {
+      el.classList.remove("tyl-item--removing");
+      return;
+    }
     allItems = allItems.filter((i) => i.id !== id);
     selectedIds.delete(id);
     renderList();
@@ -489,7 +531,7 @@ async function handleUndo() {
 async function saveAndClose() {
   const cats = settings.categories || [];
   if (cats.length === 0) {
-    await browser.runtime.sendMessage({ action: "saveAndCloseCurrentTab" });
+    await sendMutation({ action: "saveAndCloseCurrentTab" });
     return;
   }
   showSaveCloseDropdown();
@@ -505,7 +547,7 @@ function showSaveCloseDropdown() {
   uncatBtn.textContent = tylT("popup_category_uncategorized", currentLang);
   uncatBtn.addEventListener("click", async () => {
     dd.hidden = true;
-    await browser.runtime.sendMessage({ action: "saveAndCloseCurrentTab", categoryId: null });
+    await sendMutation({ action: "saveAndCloseCurrentTab", categoryId: null });
   });
   dd.appendChild(uncatBtn);
 
@@ -519,7 +561,7 @@ function showSaveCloseDropdown() {
     btn.appendChild(document.createTextNode(c.name));
     btn.addEventListener("click", async () => {
       dd.hidden = true;
-      await browser.runtime.sendMessage({ action: "saveAndCloseCurrentTab", categoryId: c.id });
+      await sendMutation({ action: "saveAndCloseCurrentTab", categoryId: c.id });
     });
     dd.appendChild(btn);
   });
@@ -547,7 +589,8 @@ function showSaveCloseDropdown() {
 // ─── Save All Tabs ───────────────────────────────────────
 
 async function saveAllTabs() {
-  const resp = await browser.runtime.sendMessage({ action: "saveAllTabs", categoryId: null });
+  const resp = await sendMutation({ action: "saveAllTabs", categoryId: null });
+  if (!resp.success) return;
   if (resp.added > 0) await loadItems();
 }
 
@@ -560,9 +603,15 @@ async function handleDrop(targetId) {
   const srcIdx = allItems.findIndex((i) => i.id === dragSrcId);
   const tgtIdx = allItems.findIndex((i) => i.id === targetId);
   if (srcIdx < 0 || tgtIdx < 0) return;
-  const [moved] = allItems.splice(srcIdx, 1);
-  allItems.splice(tgtIdx, 0, moved);
-  await browser.runtime.sendMessage({ action: "reorderItems", items: allItems });
+  const nextItems = [...allItems];
+  const [moved] = nextItems.splice(srcIdx, 1);
+  nextItems.splice(tgtIdx, 0, moved);
+  const resp = await sendMutation({ action: "reorderItems", items: nextItems });
+  if (!resp.success) {
+    dragSrcId = null;
+    return;
+  }
+  allItems = nextItems;
   renderList();
   dragSrcId = null;
 }
@@ -600,7 +649,8 @@ function updateBulkCount() {
 async function bulkOpen() {
   const urls = allItems.filter((i) => selectedIds.has(i.id)).map((i) => i.url);
   if (urls.length === 0) return;
-  await browser.runtime.sendMessage({ action: "openItems", urls });
+  const resp = await sendMutation({ action: "openItems", urls });
+  if (!resp.success) return;
   if (settings.autoDelete) { allItems = allItems.filter((i) => !selectedIds.has(i.id)); selectedIds.clear(); renderList(); }
   toggleSelectMode();
 }
@@ -608,7 +658,8 @@ async function bulkOpen() {
 async function bulkDelete() {
   const ids = [...selectedIds];
   if (ids.length === 0) return;
-  const resp = await browser.runtime.sendMessage({ action: "softDeleteItems", ids });
+  const resp = await sendMutation({ action: "softDeleteItems", ids });
+  if (!resp.success) return;
   allItems = allItems.filter((i) => !selectedIds.has(i.id));
   const count = ids.length;
   selectedIds.clear();
@@ -761,14 +812,16 @@ function showReminderDropdown(item, anchor) {
 }
 
 async function setReminder(id, ts) {
-  await browser.runtime.sendMessage({ action: "setItemReminder", id, reminderAt: ts });
+  const resp = await sendMutation({ action: "setItemReminder", id, reminderAt: ts });
+  if (!resp.success) return;
   const item = allItems.find((i) => i.id === id);
   if (item) item.reminderAt = ts;
   renderList();
 }
 
 async function clearReminder(id) {
-  await browser.runtime.sendMessage({ action: "clearItemReminder", id });
+  const resp = await sendMutation({ action: "clearItemReminder", id });
+  if (!resp.success) return;
   const item = allItems.find((i) => i.id === id);
   if (item) item.reminderAt = null;
   renderList();
@@ -854,7 +907,8 @@ function showNoteDropdown(item, anchor) {
 }
 
 async function saveItemNote(id, note) {
-  await browser.runtime.sendMessage({ action: "updateItemNote", id, note });
+  const resp = await sendMutation({ action: "updateItemNote", id, note });
+  if (!resp.success) return;
   const item = allItems.find((i) => i.id === id);
   if (item) item.note = note;
   renderList();

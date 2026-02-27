@@ -2,6 +2,10 @@
 
 A focused Firefox extension that helps you tame tab overload. Save pages and links to a personal "read later" queue — searchable, sortable, and always one click away.
 
+## Current Version
+
+`1.0.6`
+
 ## Install
 
 > **Firefox Add-ons:** [https://addons.mozilla.org/firefox/addon/tab-you-later/](https://addons.mozilla.org/firefox/addon/tab-you-later/)

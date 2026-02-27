@@ -46,8 +46,8 @@ tab-you-later/
 
 ## Current Version
 
-- Firefox: `1.0.5`
-- Chrome: `1.0.5`
+- Firefox: `1.0.6`
+- Chrome: `1.0.6`
 
 ## Shared Feature Set
 

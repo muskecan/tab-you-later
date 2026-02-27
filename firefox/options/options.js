@@ -134,9 +134,44 @@ function applyFaviconModeLabels() {
   });
 }
 
+function runtimeErrorToMessageKey(errorCode) {
+  switch (errorCode) {
+    case "encryption_locked":
+      return "error_encryption_locked_action";
+    case "sync_quota_exceeded":
+      return "error_sync_quota_exceeded";
+    case "sync_read_failed":
+      return "error_sync_read_failed";
+    case "sync_write_failed":
+      return "error_sync_write_failed";
+    case "sync_migration_failed":
+      return "error_sync_migration_failed";
+    case "decrypt_failed":
+      return "error_decrypt_failed";
+    default:
+      return "error_sync_migration_failed";
+  }
+}
+
+function showRuntimeError(errorCode) {
+  const key = runtimeErrorToMessageKey(errorCode);
+  showStatus(tylT(key, currentLang));
+}
+
 async function save() {
-  await browser.runtime.sendMessage({ action: "saveSettings", settings: { ...settings } });
-  showStatus(tylT("options_saved", currentLang));
+  const resp = await browser.runtime.sendMessage({ action: "saveSettings", settings: { ...settings } });
+  if (resp && resp.success) {
+    showStatus(tylT("options_saved", currentLang));
+    return true;
+  }
+
+  const fresh = await browser.runtime.sendMessage({ action: "getSettings" });
+  if (fresh && fresh.settings) {
+    settings = fresh.settings;
+    DOM.syncToggle.checked = settings.syncEnabled === true;
+  }
+  showRuntimeError(resp && resp.error);
+  return false;
 }
 
 async function refreshEncryptionUI() {
@@ -179,14 +214,18 @@ async function handleEncryptAction() {
       settings.encryptionEnabled = true;
       showStatus(tylT("encryption_enabled_msg", currentLang));
       await refreshEncryptionUI();
+    } else {
+      showRuntimeError(resp.error);
     }
   } else if (mode === "unlock") {
     const resp = await browser.runtime.sendMessage({ action: "unlockEncryption", passphrase: pass });
     if (resp.success) {
       showStatus(tylT("encryption_unlocked_msg", currentLang));
       await refreshEncryptionUI();
-    } else {
+    } else if (resp.error === "wrong_passphrase") {
       showStatus(tylT("encryption_wrong_pass", currentLang));
+    } else {
+      showRuntimeError(resp.error);
     }
   } else if (mode === "disable") {
     if (!confirm(tylT("encryption_disable_confirm", currentLang))) return;
@@ -195,8 +234,10 @@ async function handleEncryptAction() {
       settings.encryptionEnabled = false;
       showStatus(tylT("encryption_disabled_msg", currentLang));
       await refreshEncryptionUI();
-    } else {
+    } else if (resp.error === "wrong_passphrase") {
       showStatus(tylT("encryption_wrong_pass", currentLang));
+    } else {
+      showRuntimeError(resp.error);
     }
   }
 }
@@ -276,7 +317,11 @@ function enterEditMode(row, cat) {
   saveBtn.addEventListener("click", async () => {
     const newName = input.value.trim();
     if (!newName) return;
-    await browser.runtime.sendMessage({ action: "updateCategory", id: cat.id, name: newName, color: editColor });
+    const updateResp = await browser.runtime.sendMessage({ action: "updateCategory", id: cat.id, name: newName, color: editColor });
+    if (updateResp && updateResp.success === false) {
+      showRuntimeError(updateResp.error);
+      return;
+    }
     const resp = await browser.runtime.sendMessage({ action: "getSettings" });
     settings = resp.settings;
     renderCategories();
@@ -348,6 +393,11 @@ async function handleImport() {
     const entries = Array.isArray(data) ? data : (data.items || []);
     if (!Array.isArray(entries)) throw new Error("Invalid");
     const resp = await browser.runtime.sendMessage({ action: "importItems", entries });
+    if (resp && resp.success === false) {
+      showRuntimeError(resp.error);
+      DOM.importFile.value = "";
+      return;
+    }
     showStatus(tylT("import_success", currentLang, { n: resp.imported }));
   } catch { showStatus(tylT("import_error", currentLang)); }
   DOM.importFile.value = "";
@@ -368,6 +418,7 @@ async function clearAllData() {
   if (!confirm(tylT("options_clear_confirm", currentLang))) return;
   await browser.storage.local.remove("tylItems");
   await browser.storage.sync.remove("tylItems");
+  await browser.storage.sync.remove("tylSettings");
   showStatus(tylT("options_cleared", currentLang));
 }
 
