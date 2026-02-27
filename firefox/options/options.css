@@ -214,7 +214,14 @@ body {
 }
 .opt-time-input:focus { border-color: var(--opt-accent); }
 
-.opt-cat-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.opt-cat-list {
+  display: flex; flex-direction: column; gap: 6px; margin: 8px 0;
+  max-height: 210px; overflow-y: auto; scroll-behavior: smooth;
+}
+.opt-cat-list::-webkit-scrollbar { width: 6px; }
+.opt-cat-list::-webkit-scrollbar-track { background: transparent; }
+.opt-cat-list::-webkit-scrollbar-thumb { background: var(--opt-border); border-radius: 3px; }
+.opt-cat-list::-webkit-scrollbar-thumb:hover { background: var(--opt-text-tertiary); }
 
 .opt-cat-item {
   display: flex; align-items: center; gap: 8px;

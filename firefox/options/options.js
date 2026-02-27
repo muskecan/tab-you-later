@@ -302,6 +302,7 @@ async function addCategory() {
   settings.categories.push({ id: crypto.randomUUID ? crypto.randomUUID() : uuidv4(), name, color });
   DOM.newCatName.value = "";
   renderCategories();
+  DOM.catList.scrollTop = DOM.catList.scrollHeight;
   await save();
 }
 

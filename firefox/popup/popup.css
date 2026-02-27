@@ -161,14 +161,12 @@ body {
 
 .tyl-category-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 5px;
   padding: 0 12px 8px;
-  overflow-x: auto;
   flex-shrink: 0;
-  scrollbar-width: none;
 }
 .tyl-category-bar[hidden] { display: none; }
-.tyl-category-bar::-webkit-scrollbar { display: none; }
 
 .tyl-cat-chip {
   display: inline-flex;
