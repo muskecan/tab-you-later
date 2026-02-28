@@ -974,13 +974,9 @@ async function migrateStorage(newSettings) {
 
   if (!toSync && !toLocal) {
     if (merged.syncEnabled) {
-      const currentSyncSettings = await getSyncSettingsStrict();
-      const mergedSettings = mergeSettingsForSync(merged, currentSyncSettings || {});
-      await saveSyncSettingsStrict(mergedSettings);
-      await saveLocalSettings(mergedSettings);
-    } else {
-      await saveLocalSettings(merged);
+      await saveSyncSettingsStrict(merged);
     }
+    await saveLocalSettings(merged);
     return;
   }
 
