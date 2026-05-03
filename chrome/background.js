@@ -431,7 +431,17 @@ async function resolveFavicon(tab, mode) {
 
 async function addItem(title, url, categoryId, favIconUrl) {
   const items = await getItems();
-  if (items.some((i) => i.url === url)) { flashBadge("!", "#e27900"); return; }
+  const dup = items.find((i) => i.url === url);
+  if (dup) {
+    if (categoryId && dup.category !== categoryId) {
+      dup.category = categoryId;
+      await saveItems(items);
+      flashBadge("✓", "#058b00");
+      return;
+    }
+    flashBadge("!", "#e27900");
+    return;
+  }
 
   items.unshift({
     id: uuidv4(),
@@ -689,6 +699,7 @@ const ENCRYPTION_WRITE_ACTIONS = new Set([
   "createCategory",
   "updateCategory",
   "deleteCategory",
+  "deleteCategoryAndItems",
   "saveAndCloseCurrentTab",
   "softDeleteItem",
   "softDeleteItems",
@@ -748,8 +759,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           if (focusedWin) {
             const tabs = await chrome.tabs.query({ active: true, windowId: focusedWin.id });
             if (tabs[0] && tabs[0].url && !tabs[0].url.startsWith("chrome://") && !tabs[0].url.startsWith("chrome-extension://")) {
-              const fav = await resolveFavicon(tabs[0], s.faviconMode);
-              await addItem(tabs[0].title, tabs[0].url, id, fav);
+              const existing = await getItems();
+              const dup = existing.find((i) => i.url === tabs[0].url);
+              if (dup) {
+                dup.category = id;
+                await saveItems(existing);
+                flashBadge("✓", "#058b00");
+              } else {
+                const fav = await resolveFavicon(tabs[0], s.faviconMode);
+                await addItem(tabs[0].title, tabs[0].url, id, fav);
+              }
             }
           }
         }
@@ -776,6 +795,28 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         await migrateStorage(s);
         await setupContextMenus();
         return { success: true };
+      }
+
+      case "deleteCategoryAndItems": {
+        const items = await getItems();
+        const ids = new Set(msg.ids || []);
+        const removed = items.filter((i) => ids.has(i.id));
+        const remaining = items.filter((i) => !ids.has(i.id));
+        for (const r of removed) { if (r.reminderAt) chrome.alarms.clear(ALARM_ITEM_PREFIX + r.id); }
+        await saveItems(remaining);
+        const token = removed.length > 0 ? await storeUndo(removed) : null;
+        if (msg.categoryIds && msg.categoryIds.length > 0) {
+          try {
+            const s = await getSettings();
+            const removeSet = new Set(msg.categoryIds);
+            s.categories = (s.categories || []).filter((c) => !removeSet.has(c.id));
+            try { await migrateStorage(s); } catch { try { await saveLocalSettings(s); } catch (e) { console.warn("TYL local settings save failed:", e); } }
+            try { await setupContextMenus(); } catch (e) { console.warn("TYL context menu rebuild failed:", e); }
+          } catch (e) {
+            console.warn("TYL category record removal failed:", e);
+          }
+        }
+        return { success: true, token };
       }
 
       case "saveAndCloseCurrentTab": {
@@ -872,7 +913,15 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       case "openItems": {
         for (const u of msg.urls) await chrome.tabs.create({ url: u });
         const s = await getSettings();
-        if (s.autoDelete) { const items = await getItems(); const us = new Set(msg.urls); await saveItems(items.filter((i) => !us.has(i.url))); }
+        if (s.autoDelete) {
+          try {
+            const items = await getItems();
+            const us = new Set(msg.urls);
+            await saveItems(items.filter((i) => !us.has(i.url)));
+          } catch (e) {
+            console.warn("TYL openItems autoDelete failed:", e);
+          }
+        }
         return { success: true };
       }
 

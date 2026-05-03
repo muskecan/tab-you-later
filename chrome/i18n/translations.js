@@ -11,6 +11,8 @@ const TYL_TRANSLATIONS = {
     popup_select_mode_title: "Select items",
     popup_save_all_title: "Save all tabs",
     popup_save_close_title: "Save & Close Tab",
+    popup_open_all_title: "Open all tabs in category",
+    popup_delete_category_title: "Delete category",
 
     popup_search_placeholder: "Search… (cat: site: is:pinned before: after:)",
     sort_newest: "Newest",
@@ -204,6 +206,8 @@ const TYL_TRANSLATIONS = {
     popup_select_mode_title: "Öğeleri seç",
     popup_save_all_title: "Tüm sekmeleri kaydet",
     popup_save_close_title: "Kaydet ve Sekmeyi Kapat",
+    popup_open_all_title: "Kategorideki tüm sekmeleri aç",
+    popup_delete_category_title: "Kategoriyi sil",
 
     popup_search_placeholder: "Ara… (cat: site: is:pinned before: after:)",
     sort_newest: "En Yeni",
@@ -377,6 +381,8 @@ const TYL_TRANSLATIONS = {
     popup_select_mode_title: "Elemente auswählen",
     popup_save_all_title: "Alle Tabs speichern",
     popup_save_close_title: "Speichern & Tab schließen",
+    popup_open_all_title: "Alle Tabs der Kategorie öffnen",
+    popup_delete_category_title: "Kategorie löschen",
 
     popup_search_placeholder: "Suchen… (cat: site: is:pinned before: after:)",
     sort_newest: "Neueste",
@@ -550,6 +556,8 @@ const TYL_TRANSLATIONS = {
     popup_select_mode_title: "Sélectionner des éléments",
     popup_save_all_title: "Enregistrer tous les onglets",
     popup_save_close_title: "Enregistrer & Fermer l'onglet",
+    popup_open_all_title: "Ouvrir tous les onglets de la catégorie",
+    popup_delete_category_title: "Supprimer la catégorie",
 
     popup_search_placeholder: "Rechercher… (cat: site: is:pinned before: after:)",
     sort_newest: "Plus récent",
@@ -723,6 +731,8 @@ const TYL_TRANSLATIONS = {
     popup_select_mode_title: "Seleccionar elementos",
     popup_save_all_title: "Guardar todas las pestañas",
     popup_save_close_title: "Guardar y cerrar pestaña",
+    popup_open_all_title: "Abrir todas las pestañas de la categoría",
+    popup_delete_category_title: "Eliminar categoría",
 
     popup_search_placeholder: "Buscar… (cat: site: is:pinned before: after:)",
     sort_newest: "Más reciente",
@@ -896,6 +906,8 @@ const TYL_TRANSLATIONS = {
     popup_select_mode_title: "选择项目",
     popup_save_all_title: "保存所有标签页",
     popup_save_close_title: "保存并关闭标签页",
+    popup_open_all_title: "打开分类中的所有标签页",
+    popup_delete_category_title: "删除分类",
 
     popup_search_placeholder: "搜索… (cat: site: is:pinned before: after:)",
     sort_newest: "最新",
@@ -1069,6 +1081,8 @@ const TYL_TRANSLATIONS = {
     popup_select_mode_title: "アイテムを選択",
     popup_save_all_title: "すべてのタブを保存",
     popup_save_close_title: "保存してタブを閉じる",
+    popup_open_all_title: "カテゴリ内のすべてのタブを開く",
+    popup_delete_category_title: "カテゴリを削除",
 
     popup_search_placeholder: "検索… (cat: site: is:pinned before: after:)",
     sort_newest: "新しい順",

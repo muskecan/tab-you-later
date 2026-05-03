@@ -54,6 +54,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#select-mode-btn").addEventListener("click", toggleSelectMode);
   $("#save-all-btn").addEventListener("click", saveAllTabs);
   $("#save-close-btn").addEventListener("click", saveAndClose);
+  $("#open-all-btn").addEventListener("click", openAllInCategory);
+  $("#delete-cat-btn").addEventListener("click", deleteActiveCategory);
   DOM.search.addEventListener("input", () => renderList());
   DOM.sortSelect.addEventListener("change", onSortChange);
   $("#bulk-select-all").addEventListener("click", toggleSelectAll);
@@ -592,6 +594,43 @@ async function saveAllTabs() {
   const resp = await sendMutation({ action: "saveAllTabs", categoryId: null });
   if (!resp.success) return;
   if (resp.added > 0) await loadItems();
+}
+
+// ─── Open All / Delete Category (active filter) ──────────
+
+function getItemsInActiveCategory() {
+  if (activeCategory === null) return allItems;
+  if (activeCategory === "__none__") return allItems.filter((i) => !i.category);
+  return allItems.filter((i) => i.category === activeCategory);
+}
+
+async function openAllInCategory() {
+  const urls = getItemsInActiveCategory().map((i) => i.url);
+  if (urls.length === 0) return;
+  await sendMutation({ action: "openItems", urls }, { silent: true });
+  if (settings.autoDelete) await loadItems();
+}
+
+async function deleteActiveCategory() {
+  const ids = getItemsInActiveCategory().map((i) => i.id);
+  const cats = settings.categories || [];
+  let categoryIds;
+  if (activeCategory === null) categoryIds = cats.map((c) => c.id);
+  else if (activeCategory === "__none__") categoryIds = [];
+  else categoryIds = [activeCategory];
+
+  if (ids.length === 0 && categoryIds.length === 0) return;
+
+  const resp = await sendMutation({ action: "deleteCategoryAndItems", ids, categoryIds }, { silent: true });
+
+  activeCategory = null;
+  try {
+    const fresh = await chrome.runtime.sendMessage({ action: "getSettings" });
+    if (fresh && fresh.settings) settings = fresh.settings;
+  } catch {}
+  await loadItems();
+  renderCategoryBar();
+  if (resp && resp.token && ids.length > 0) showUndoToast(resp.token, ids.length);
 }
 
 // ─── Drag & Drop ─────────────────────────────────────────
